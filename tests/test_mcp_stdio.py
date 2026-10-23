@@ -58,6 +58,28 @@ class Stdio(unittest.TestCase):
         c = db.connect(self.path)
         self.assertEqual(c.execute("SELECT COUNT(*) FROM scores").fetchone()[0], 2)
 
+    def test_tool_calls_work_from_different_threads(self):
+        # The SDK runs sync tools on worker threads; a connection opened on one thread and
+        # reused on another raises sqlite3.ProgrammingError. Deterministic version of the race.
+        import threading
+        from unittest import mock
+        from vostuk_scanner import server
+        out = []
+
+        def one(score):
+            try:
+                name, a = self.good(GOOD, score)
+                out.append(server._call(core.record_score, *[a[k] for k in (
+                    "scan_id", "mint", "score", "verdict", "reasons", "rubric_version", "model_name")])["ok"])
+            except Exception as e:  # noqa: BLE001
+                out.append(repr(e))
+        with mock.patch.dict(os.environ, {"VOSTUK_SCANNER_DB": self.path}):
+            for score in (7, 8):
+                t = threading.Thread(target=one, args=(score,))
+                t.start()
+                t.join()
+        self.assertEqual(out, [True, True])
+
     def test_rejection_message_reaches_the_model(self):
         name, a = self.good(GOOD, 7)
         a["score"] = 11

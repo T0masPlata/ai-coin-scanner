@@ -59,7 +59,7 @@ STDIO_MUTATIONS = [
      "test_rejection_message_reaches_the_model"),
     ("conn per call (threads)", "vostuk_scanner/server.py",
      "    conn = db.connect()\n    try:", "    global _C\n    conn = _C = globals().get('_C') or db.connect()\n    try:",
-     "test_parallel_record_score_all_land"),
+     "test_tool_calls_work_from_different_threads"),
 ]
 try:
     import mcp  # noqa: F401
