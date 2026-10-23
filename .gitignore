@@ -1,0 +1,7 @@
+# your keys - never commit
+.env
+# scan results
+scans.csv
+__pycache__/
+*.pyc
+.venv/
