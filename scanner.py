@@ -205,6 +205,7 @@ def append_csv(rows, path):
 def scan(use_ai=True, verbose=False):
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     provider = setting("AI_PROVIDER") if use_ai else "none"
+    print("NOT FINANCIAL ADVICE - educational watchlist only. Most new meme coins go to zero.")
     print(f"[{now}] scanning (AI: {provider})")
 
     addresses = latest_solana_tokens()
@@ -244,6 +245,8 @@ def scan(use_ai=True, verbose=False):
 
     rows.sort(key=lambda r: -1 if r["ai_score"] is None else r["ai_score"], reverse=True)
     print_table(rows)
+    if rows:
+        print("\nNOT FINANCIAL ADVICE. A score is a reason to look, not to buy.")
     if rows:
         out = os.path.join(HERE, "scans.csv")
         append_csv(rows, out)

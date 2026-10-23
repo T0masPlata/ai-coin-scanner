@@ -281,3 +281,23 @@ class NoModelNoMoney(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class NotFinancialAdvice(unittest.TestCase):
+    """The disclaimer is part of the product: it must reach the AI, the docs and the terminal."""
+    ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    def read(self, rel):
+        with open(os.path.join(self.ROOT, rel)) as f:
+            return f.read()
+
+    def test_rubric_carries_disclaimer(self):
+        self.assertIn("NOT FINANCIAL ADVICE", core.get_rubric()["disclaimer"])
+
+    def test_docs_lead_with_disclaimer(self):
+        for rel in ("README.md", "HOW-TO-USE.md"):
+            self.assertIn("NOT FINANCIAL ADVICE", self.read(rel)[:600], rel)
+
+    def test_server_instructions_and_cli_say_it(self):
+        self.assertIn("NOT FINANCIAL ADVICE", self.read("vostuk_scanner/server.py").split('"""', 4)[3])
+        self.assertGreaterEqual(self.read("scanner.py").count("NOT FINANCIAL ADVICE"), 2)

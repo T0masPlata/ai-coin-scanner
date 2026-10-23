@@ -1,5 +1,9 @@
 # How to use the AI Coin Scanner
 
+> **NOT FINANCIAL ADVICE.** This is an educational project. A score from this scanner, or from
+> your AI, is not a recommendation to buy, sell or hold anything. Most new meme coins go to zero.
+> If you share its results, say "not financial advice" too.
+
 This guide takes you from nothing to a working scanner that uses your own AI. It takes about
 15 minutes. You don't need to know how to code, but you will type a few commands.
 
@@ -18,7 +22,7 @@ There are two ways to give it a brain. **Option A is the default and the one we 
 > score the rest from 0 to 10.
 >
 > **What this does NOT do:** it never buys, sells or touches a wallet. It is a watchlist tool.
-> Not financial advice. Most new meme coins go to zero.
+> **NOT FINANCIAL ADVICE.** Most new meme coins go to zero.
 
 ---
 

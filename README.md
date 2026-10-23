@@ -1,5 +1,9 @@
 # AI Coin Scanner
 
+> **NOT FINANCIAL ADVICE.** This is an educational project. Nothing it shows, scores or saves is a
+> recommendation to buy, sell or hold anything. Most new meme coins go to zero. Never trade money
+> you can't afford to lose.
+
 A starter kit for building your own meme coin scanner, rated by **your own AI** (Claude or ChatGPT).
 It finds new Solana coins, filters out the obvious junk and rug risks, and has your AI score which
 ones are worth a closer look.

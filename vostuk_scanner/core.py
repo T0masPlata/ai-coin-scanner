@@ -184,9 +184,14 @@ def rugcheck(conn, mint, scan_id=None, fetch=get_json, now=None):
 
 # ------------------------------------------------------------------ rubric + score
 
+DISCLAIMER = ("NOT FINANCIAL ADVICE. Educational watchlist only: a score is a reason to look, "
+              "never a recommendation to buy, sell or hold. Most new meme coins go to zero.")
+
+
 def get_rubric():
     return {"rubric_version": rubric.RUBRIC_VERSION, "rubric_text": rubric.RUBRIC_TEXT,
-            "output_schema": rubric.OUTPUT_SCHEMA}
+            "output_schema": rubric.OUTPUT_SCHEMA,
+            "disclaimer": DISCLAIMER}
 
 
 def remaining(conn, scan_id):
