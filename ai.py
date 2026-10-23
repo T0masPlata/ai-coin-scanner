@@ -11,6 +11,7 @@ import json
 import os
 import re
 import urllib.error
+import urllib.parse
 import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -49,12 +50,19 @@ def ask_openai(system, user, model, base_url=""):
     base = (base_url or "https://api.openai.com/v1").rstrip("/")
     if not key and "api.openai.com" in base:
         raise RuntimeError("OPENAI_API_KEY is not set (see HOW-TO-USE.md step 3)")
+    host = urllib.parse.urlparse(base).hostname or ""
+    if key and base.startswith("http://") and host not in ("localhost", "127.0.0.1", "::1"):
+        raise RuntimeError("AI_BASE_URL uses http:// to another machine, so your key would be "
+                           "sent unencrypted. Use https:// or a server on this computer.")
     data = _post(f"{base}/chat/completions",
                  {"Authorization": f"Bearer {key}"} if key else {},
-                 {"model": model,
+                 {"model": model, "max_completion_tokens": 2000,
                   "messages": [{"role": "system", "content": system},
                                {"role": "user", "content": user}]})
-    return data["choices"][0]["message"]["content"]
+    choices = data.get("choices") or []
+    if not choices:
+        raise RuntimeError("AI returned no answer")
+    return (choices[0].get("message") or {}).get("content") or ""
 
 
 def parse_reply(text):
@@ -91,7 +99,7 @@ def rate_coin(facts, provider, model="", base_url=""):
     except urllib.error.HTTPError as e:
         detail = e.read().decode(errors="replace")[:150]
         return {"score": None, "verdict": "AI error", "reason": f"HTTP {e.code}: {detail}"}
-    except (urllib.error.URLError, RuntimeError, KeyError, TimeoutError) as e:
+    except (OSError, RuntimeError, KeyError, IndexError, ValueError) as e:
         return {"score": None, "verdict": "AI error", "reason": str(e)[:150]}
 
     parsed = parse_reply(text)

@@ -62,7 +62,12 @@ def setting(name):
 
 
 def num(name):
-    return float(setting(name))
+    """Read a number setting. Accepts 20,000 or $20000 or a trailing # comment."""
+    raw = setting(name).split("#")[0].replace(",", "").replace("$", "").strip()
+    try:
+        return float(raw)
+    except ValueError:
+        sys.exit(f"{name}={setting(name)!r} in .env is not a number")
 
 
 # ---------------------------------------------------------------- fetching
@@ -97,7 +102,7 @@ def rugcheck(address):
     """RugCheck summary: {'score': int, 'risks': [...]}. None if unavailable."""
     try:
         return get_json(RUGCHECK.format(address))
-    except (urllib.error.URLError, TimeoutError, ValueError):
+    except (OSError, ValueError):  # network errors, timeouts, bad JSON
         return None
 
 
@@ -172,6 +177,16 @@ def print_table(rows):
         print(f"{'':<12}{r['url']}")
 
 
+TEXT_FIELDS = ("symbol", "name", "ai_verdict", "ai_reason")
+
+
+def csv_safe(value):
+    """Coin names are written by strangers. A name like =HYPERLINK(...) would run as a
+    formula when you open the CSV in Excel or Sheets, so prefix it with ' to keep it text."""
+    s = str(value)
+    return "'" + s if s[:1] in ("=", "+", "-", "@", "\t", "\r") else s
+
+
 def append_csv(rows, path):
     fields = ["scanned_at", "symbol", "name", "address", "age_hours", "price_usd",
               "liquidity_usd", "volume_24h_usd", "market_cap_usd", "ai_score",
@@ -181,7 +196,8 @@ def append_csv(rows, path):
         w = csv.DictWriter(f, fieldnames=fields, extrasaction="ignore")
         if new:
             w.writeheader()
-        w.writerows(rows)
+        w.writerows([{k: csv_safe(v) if k in TEXT_FIELDS else v for k, v in r.items()}
+                     for r in rows])
 
 
 # ---------------------------------------------------------------- main loop
@@ -196,7 +212,13 @@ def scan(use_ai=True, verbose=False):
 
     passed = []
     for addr in addresses:
-        pair = best_pair(addr)
+        time.sleep(0.3)  # be polite to the free APIs
+        try:
+            pair = best_pair(addr)
+        except (OSError, ValueError) as e:  # one bad response skips one coin, not the scan
+            if verbose:
+                print(f"  skip {addr[:8]}... fetch failed: {e}")
+            continue
         if not pair:
             continue
         f = coin_facts(pair)
@@ -208,7 +230,6 @@ def scan(use_ai=True, verbose=False):
                 print(f"  skip {f['symbol']:<10} {'; '.join(fails)}")
             continue
         passed.append(f)
-        time.sleep(0.3)  # be polite to the free APIs
     print(f"  {len(passed)} passed numbers + safety")
 
     max_calls = int(num("MAX_AI_CALLS_PER_SCAN"))
@@ -240,7 +261,7 @@ def main():
     while True:
         try:
             scan(use_ai=not args.no_ai, verbose=args.verbose)
-        except urllib.error.URLError as e:
+        except (OSError, ValueError) as e:
             print(f"  network error: {e}", file=sys.stderr)
         if not args.loop:
             break
@@ -248,4 +269,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nstopped.")

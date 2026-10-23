@@ -13,7 +13,8 @@ Judge it on:
    the 1h and 24h price change.
 3. Liquidity: is there enough money in the pool to sell out of it?
 4. Red flags: a huge pump in the last hour (chasing), far more sells than
-   buys, no website and no socials, a name copying a famous coin.
+   buys, a name copying a famous coin. Having a website and socials proves
+   nothing on its own; anyone can make them in ten minutes.
 
 Be strict. Most new coins should score 3 or lower.
 

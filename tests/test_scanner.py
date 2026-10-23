@@ -79,6 +79,42 @@ class AIReplies(unittest.TestCase):
         self.assertIn("ANTHROPIC_API_KEY", r["reason"])
 
 
+class Hardening(unittest.TestCase):
+    def test_csv_formula_is_neutralised(self):
+        self.assertEqual(scanner.csv_safe('=HYPERLINK("x")'), '\'=HYPERLINK("x")')
+        self.assertEqual(scanner.csv_safe("PEPE"), "PEPE")
+
+    def test_csv_file_has_no_live_formula(self):
+        import csv, tempfile
+        path = os.path.join(tempfile.mkdtemp(), "s.csv")
+        scanner.append_csv([{"symbol": "=1+1", "name": "@x", "ai_score": 5}], path)
+        row = next(csv.DictReader(open(path)))
+        self.assertTrue(row["symbol"].startswith("'"))
+        self.assertTrue(row["name"].startswith("'"))
+
+    def test_key_never_sent_over_plain_http_to_another_machine(self):
+        with mock.patch.dict(os.environ, {"OPENAI_API_KEY": "k"}), \
+             mock.patch.object(ai, "_post") as post:
+            r = ai.rate_coin({"symbol": "T"}, "openai", "m", "http://192.168.1.50:8000/v1")
+        post.assert_not_called()
+        self.assertIn("unencrypted", r["reason"])
+
+    def test_local_http_server_is_allowed(self):
+        reply = {"choices": [{"message": {"content": '{"score": 1, "verdict": "SKIP"}'}}]}
+        with mock.patch.dict(os.environ, {"OPENAI_API_KEY": "k"}), \
+             mock.patch.object(ai, "_post", return_value=reply):
+            self.assertEqual(ai.rate_coin({}, "openai", "m", "http://localhost:11434/v1")["score"], 1)
+
+    def test_empty_ai_answer_is_an_error_not_a_crash(self):
+        with mock.patch.dict(os.environ, {"OPENAI_API_KEY": "k"}), \
+             mock.patch.object(ai, "_post", return_value={"choices": []}):
+            self.assertEqual(ai.rate_coin({}, "openai")["verdict"], "AI error")
+
+    def test_human_style_numbers_in_env(self):
+        with mock.patch.dict(os.environ, {"MIN_LIQUIDITY_USD": "$20,000  # twenty k"}):
+            self.assertEqual(scanner.num("MIN_LIQUIDITY_USD"), 20000)
+
+
 class NeverTrades(unittest.TestCase):
     def test_no_wallet_or_signing_code(self):
         root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

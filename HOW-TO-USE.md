@@ -3,8 +3,9 @@
 This guide takes you from nothing to a working scanner that uses your own AI. It takes about
 15 minutes. You don't need to know how to code, but you will type a few commands.
 
-> **What this does:** every scan, it pulls the newest Solana meme coins, throws out the ones that
-> are too small, too old or look like rugs, and asks your AI to score the rest from 0 to 10.
+> **What this does:** every scan, it pulls the newest Solana meme coins that have a DexScreener
+> profile, throws out the ones that are too small, too old or look like rugs, and asks your AI to
+> score the rest from 0 to 10.
 >
 > **What this does NOT do:** it never buys, sells or touches a wallet. It is a watchlist tool.
 > Not financial advice. Most new meme coins go to zero.
@@ -26,6 +27,10 @@ If you see `Python 3.9` or higher, skip ahead. If not, download it from
 [python.org/downloads](https://www.python.org/downloads/) and install it.
 On Windows, tick **"Add Python to PATH"** during install, and type `python` instead of `python3`
 everywhere in this guide.
+
+**Mac, after installing from python.org:** open **Finder > Applications > Python 3.x** and
+double-click **Install Certificates.command** once. Without it, every scan fails with
+`CERTIFICATE_VERIFY_FAILED`.
 
 ## Step 2. Download the scanner
 
@@ -182,7 +187,8 @@ python3 -m unittest
 ## What each check does
 
 1. **Find coins:** the newest Solana token profiles on [DexScreener](https://dexscreener.com).
-   Free, no key.
+   Free, no key. A profile is something a coin's team pays DexScreener for, so this feed shows
+   coins with a marketing budget, not every new coin. Having a profile is not a sign of quality.
 2. **Number filters:** liquidity, 24h volume and age, from DexScreener.
 3. **Safety check:** [RugCheck](https://rugcheck.xyz)'s report. A coin fails if its risk score is
    too high or it has any "danger" warning, such as the creator still being able to mint more
@@ -208,6 +214,9 @@ python3 -m unittest
 | `HTTP 401` | The key is wrong or was deleted. Make a new one |
 | `HTTP 400 ... credit` or `HTTP 429` | Out of credit or rate-limited. Add credit or scan less often |
 | `HTTP 404 ... model` | Your account can't use that model. Set `AI_MODEL=` to one it can |
+| `CERTIFICATE_VERIFY_FAILED` | Mac only: Finder > Applications > Python 3.x > double-click **Install Certificates.command**, then run again |
+| `AI_BASE_URL uses http:// to another machine` | Your key would travel unencrypted. Use an `https://` address, or remove `OPENAI_API_KEY` for a keyless local server |
+| `reply was not valid JSON` | The AI didn't answer in the format `prompt.txt` asks for. Try a different model, or check you didn't remove the last lines of `prompt.txt` |
 | `network error` | Your internet or the free API is down. Try again in a minute |
 | `0 passed` every time | Normal on quiet days. Run with `-v`, or lower the filters in `.env` |
 
