@@ -5,3 +5,10 @@ scans.csv
 __pycache__/
 *.pyc
 .venv/
+# local scanner state and upload tokens - never commit
+*.db
+*.db-wal
+*.db-shm
+credentials.toml
+*.egg-info/
+build/
