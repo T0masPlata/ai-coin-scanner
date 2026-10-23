@@ -1,26 +1,61 @@
 # AI Coin Scanner
 
 A starter kit for building your own meme coin scanner, rated by **your own AI** (Claude or ChatGPT).
-It finds new Solana coins, filters out the obvious junk and rug risks, and asks your AI which ones
-are worth a closer look.
+It finds new Solana coins, filters out the obvious junk and rug risks, and has your AI score which
+ones are worth a closer look.
 
 **It never trades.** No wallet, no keys to money, no buying or selling. It only reads public data
-and prints a watchlist.
+and makes a watchlist. A test fails if wallet or signing code ever appears.
 
 **Start here: [HOW-TO-USE.md](HOW-TO-USE.md)** - exact setup steps, from zero to your first scan.
 
+## Two ways to run it
+
+**A. Use your Claude or ChatGPT plan (default, no API key).** The scanner is an MCP server,
+`vostuk-scanner`. Your own Claude Code or Codex CLI starts it and calls its tools; the model runs
+in your CLI, under your login, on your plan.
+
+```
+claude mcp add vostuk -- /path/to/ai-coin-scanner/.venv/bin/python -m vostuk_scanner
+claude -p "Use the vostuk scanner tools to scan and score new Solana coins. Follow the rubric's sequence exactly."
+```
+
+**We never accept, proxy, store or ask for your Claude or ChatGPT login, OAuth token, session or
+cookies.** There is no "Login with Claude/ChatGPT" button, and the scanner contains no AI client at
+all (a test enforces that). The only credential it ever handles is your own optional dashboard
+upload token (`vsk_...`), which only lets you push scan results to your own dashboard.
+
+**B. Use an API key (the original way).**
+
 ```
 python3 scanner.py --no-ai     # free test run, no AI
-python3 scanner.py             # scan + AI ratings
+python3 scanner.py             # scan + AI ratings via your API key
 python3 scanner.py --loop 15   # keep scanning every 15 minutes
 ```
 
+## Files
+
 | File | What it is |
 |---|---|
-| `scanner.py` | Fetches coins, runs the filters and safety checks, prints the table |
-| `ai.py` | Sends each coin to your AI and reads back a score |
-| `prompt.txt` | The instructions your AI follows. Edit this to change how it judges coins |
-| `.env.example` | Settings template. Copy to `.env` and add your key |
-| `tests/` | Offline tests: `python3 -m unittest` |
+| `vostuk_scanner/` | Option A: the MCP server (`server.py`), scan + RugCheck (`core.py`), rubric and score rules (`rubric.py`), local SQLite (`db.py`), dashboard upload (`upload.py`) |
+| `scanner.py` | Option B: fetches coins, runs the filters and safety checks, prints the table |
+| `ai.py` | Option B: sends each coin to your AI over its API and reads back a score |
+| `prompt.txt` | Option B: the instructions your AI follows |
+| `.env.example` | Option B: settings template. Copy to `.env` and add your key |
+| `tests/` | Offline tests: `python3 -m unittest` (the stdio MCP tests need `.venv/bin/python`) |
+| `tools/mutation_check.py` | Breaks each scoring/upload rule in turn and checks a test goes red |
+
+## The MCP tools
+
+| Tool | Does |
+|---|---|
+| `scan_candidates` | Newest Solana tokens from DexScreener, filtered by liquidity, volume and age; opens a scan |
+| `rugcheck` | RugCheck summary for one coin (authorities, top-10 holders, LP locked, risk score) |
+| `get_rubric` | The versioned scoring rubric and its hard rules |
+| `record_score` | Stores your AI's score after checking it: 0-10, WATCH only at 7+, reasons must cite a metric, freeze authority caps at 2, refused if no RugCheck lookup |
+| `sync_results` | Optional: pushes the scored scan to your dashboard with your upload token |
+
+DexScreener and RugCheck are called from your computer, at most once a second each, with RugCheck
+answers cached for an hour.
 
 Educational project. Not financial advice. Most new meme coins go to zero.

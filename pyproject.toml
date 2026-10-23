@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vostuk-scanner"
+version = "0.3.0"
+description = "Read-only Solana coin watchlist scanner as an MCP server: your own Claude Code or Codex does the scoring, on your own plan."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+dependencies = ["mcp>=2.3,<3"]
+
+[project.scripts]
+vostuk-scanner = "vostuk_scanner.server:main"
+
+[tool.setuptools]
+packages = ["vostuk_scanner"]
